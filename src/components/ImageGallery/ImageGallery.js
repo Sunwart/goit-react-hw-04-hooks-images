@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import { ImageGalleryContainer } from './ImageGallery.styled';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
-import propTypes from 'prop-types';
 
 function ImageGallery({ images }) {
   return (
@@ -22,6 +21,6 @@ ImageGallery.propTypes = {
       preview: PropTypes.string.isRequired,
       img: PropTypes.string.isRequired,
       alt: PropTypes.string.isRequired,
-    }),
+    })
   ),
 };
