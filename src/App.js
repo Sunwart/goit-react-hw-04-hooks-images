@@ -12,38 +12,42 @@ export default function App() {
   const [status, setStatus] = useState('idle');
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    if (query !== '' && images !== []) {
-      setStatus('pending');
+  useEffect(fetchImages, [page, query]);
 
+  function fetchImages() {
+    if (query !== '') {
+      setStatus('pending');
       imagesApi.getImages(query, page).then(imgs => {
         if (imgs.hits.length === 0) {
           Notiflix.Notify.info('Sorry, no images found on your request.');
           setStatus('rejected');
-          setImages([]);
           return;
         }
 
         const isRejected =
           imgs.hits.length < 12 || page * 12 === imgs.totalHits;
+        setStatus(isRejected ? 'rejected' : 'resolved');
 
         const currentImages = imgs.hits.map(
           ({ id, webformatURL, largeImageURL, tags }) => {
-            return { id, preview: webformatURL, img: largeImageURL, alt: tags };
+            return {
+              id,
+              preview: webformatURL,
+              img: largeImageURL,
+              alt: tags,
+            };
           }
         );
-
-        setStatus(isRejected ? 'rejected' : 'resolved');
         setImages([...images, ...currentImages]);
       });
     }
-  }, [query, page]);
+  }
 
   const handleSearchFormSubmit = newQuery => {
     if (newQuery !== query) {
+      setImages([]);
       setQuery(newQuery);
       setPage(1);
-      setImages([]);
     } else {
       Notiflix.Notify.info('Please, enter new search request.');
     }
@@ -59,7 +63,9 @@ export default function App() {
           {status === 'resolved' && (
             <Button
               type="button"
-              onClick={() => setPage(prev => prev + 1)}
+              onClick={() => {
+                setPage(prev => prev + 1);
+              }}
               btnName={'Load more'}
             />
           )}
