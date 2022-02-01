@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Notiflix from 'notiflix';
 import Searchbar from './components/Searchbar/Searchbar';
 import imagesApi from './services/imagesAPI';
@@ -8,15 +8,13 @@ import Loader from './components/Loader/Loader';
 
 export default function App() {
   const [query, setQuery] = useState('');
-  const [images, setImages] = useState([]);
   const [status, setStatus] = useState('idle');
   const [page, setPage] = useState(1);
 
-  useEffect(fetchImages, [page, query]);
+  const images = useRef([]);
 
-  function fetchImages() {
+  useEffect(() => {
     if (query !== '') {
-      setStatus('pending');
       imagesApi.getImages(query, page).then(imgs => {
         if (imgs.hits.length === 0) {
           Notiflix.Notify.info('Sorry, no images found on your request.');
@@ -26,30 +24,34 @@ export default function App() {
 
         const isRejected =
           imgs.hits.length < 12 || page * 12 === imgs.totalHits;
-        setStatus(isRejected ? 'rejected' : 'resolved');
 
-        const currentImages = imgs.hits.map(
-          ({ id, webformatURL, largeImageURL, tags }) => {
+        const currentImages = [
+          ...imgs.hits.map(({ id, webformatURL, largeImageURL, tags }) => {
             return {
               id,
               preview: webformatURL,
               img: largeImageURL,
               alt: tags,
             };
-          }
-        );
-        setImages([...images, ...currentImages]);
+          }),
+        ];
+
+        images.current.push(...currentImages);
+
+        setStatus(isRejected ? 'rejected' : 'resolved');
       });
     }
-  }
+  }, [query, page]);
 
   const handleSearchFormSubmit = newQuery => {
     if (newQuery !== query) {
-      setImages([]);
+      setStatus('pending');
+      images.current = [];
       setQuery(newQuery);
       setPage(1);
     } else {
       Notiflix.Notify.info('Please, enter new search request.');
+      return;
     }
   };
 
@@ -58,12 +60,13 @@ export default function App() {
       <Searchbar onSubmit={handleSearchFormSubmit} />
       {status !== 'idle' && (
         <>
-          <ImageGallery images={images} />
+          <ImageGallery images={images.current} />
           {status === 'pending' && <Loader />}
           {status === 'resolved' && (
             <Button
               type="button"
               onClick={() => {
+                setStatus('pending');
                 setPage(prev => prev + 1);
               }}
               btnName={'Load more'}
