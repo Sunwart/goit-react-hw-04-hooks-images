@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { ReactComponent as SearchIcon } from '../../icons/search.svg';
 import {
@@ -9,43 +9,38 @@ import {
   SerchFormButtonLabel,
 } from './Searchbar.styled';
 
-export default class Searchbar extends Component {
-  static propTypes = { onSubmit: PropTypes.func.isRequired };
+export default function Searchbar({ onSubmit }) {
+  const [query, setQuery] = useState('');
 
-  state = { query: '' };
-
-  handleQueryChange = event => {
-    this.setState({ query: event.currentTarget.value.toLowerCase() });
-  };
-
-  handleQuerySubmit = event => {
+  const handleQuerySubmit = event => {
     event.preventDefault();
-    if (this.state.query.trim() === '') {
+    if (query.trim() === '') {
       alert('Oooooooops, wrong query!');
       return;
     }
-    this.props.onSubmit(this.state.query);
+    onSubmit(query);
   };
 
-  render() {
-    return (
-      <SearchbarContainer>
-        <SearchForm onSubmit={this.handleQuerySubmit}>
-          <SearchFormButton type="submit">
-            <SerchFormButtonLabel>Search</SerchFormButtonLabel>
-            <SearchIcon fill="darkgray" width="24" />
-          </SearchFormButton>
-
-          <SearchFormInput
-            type="text"
-            autocomplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            value={this.state.query}
-            onChange={this.handleQueryChange}
-          />
-        </SearchForm>
-      </SearchbarContainer>
-    );
-  }
+  return (
+    <SearchbarContainer>
+      <SearchForm onSubmit={handleQuerySubmit}>
+        <SearchFormButton type="submit">
+          <SerchFormButtonLabel>Search</SerchFormButtonLabel>
+          <SearchIcon fill="darkgray" width="24" />
+        </SearchFormButton>
+        <SearchFormInput
+          type="text"
+          autocomplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          value={query}
+          onChange={event => setQuery(event.currentTarget.value.toLowerCase())}
+        />
+      </SearchForm>
+    </SearchbarContainer>
+  );
 }
+
+Searchbar.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+};
